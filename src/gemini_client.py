@@ -3,15 +3,14 @@ gemini_client.py
 Google Gemini API integrācija.
 """
 
-import google.generativeai as genai
+from google import genai
 
 
 def init_gemini(api_key):
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-1.5-flash")
+    return genai.Client(api_key=api_key)
 
 
-def generate_sql(model, db_context, user_question):
+def generate_sql(client, db_context, user_question):
     prompt = f"""Tu esi SQL eksperts. Tev ir šāda MySQL datubāze:
 
 {db_context}
@@ -21,12 +20,14 @@ Uzraksti SQL vaicājumu kas atbild uz:
 
 Prasības:
 - Tikai SELECT (nedrīkst mainīt datus)
-- Vaicājumam jāatgriež agregēti rādītāji (COUNT, SUM, AVG, MAX, MIN u.c.)
-- Atbildē iekļauj TIKAI SQL kodu, bez paskaidrojumiem vai markdown
+- Agregēti rādītāji (COUNT, SUM, AVG, MAX, MIN u.c.)
+- Tikai SQL kods, bez paskaidrojumiem
 
 SQL:"""
-
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
     sql = response.text.strip()
     if "```" in sql:
         lines = sql.split("\n")
@@ -34,7 +35,7 @@ SQL:"""
     return sql
 
 
-def describe_results(model, db_context, sql_query, results, user_question):
+def describe_results(client, db_context, sql_query, results, user_question):
     results_text = "\n".join(
         " | ".join(str(v) for v in row.values()) for row in results[:50]
     )
@@ -54,7 +55,10 @@ SQL:
 Rezultāti:
 {results_text}
 
-Apraksti šos rezultātus skaidri latviešu valodā. Izcelt galvenos secinājumus."""
+Apraksti šos rezultātus skaidri latviešu valodā. Izceli galvenos secinājumus."""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
     return response.text.strip()
