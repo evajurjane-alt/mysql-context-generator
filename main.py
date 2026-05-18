@@ -75,7 +75,7 @@ def main():
 
     print("\nInicializē Gemini...")
     try:
-        model = init_gemini(gemini_key)
+        client = init_gemini(gemini_key)
         print("Gemini gatavs!")
     except Exception as e:
         print(f"Kļūda: {e}")
@@ -97,7 +97,7 @@ def main():
 
         print("\nĢenerē SQL...")
         try:
-            sql = generate_sql(model, compact_ctx, question)
+            sql = generate_sql(client, compact_ctx, question)
             print(f"\nSQL:\n{'-'*40}\n{sql}\n{'-'*40}")
         except Exception as e:
             print(f"Kļūda: {e}")
@@ -113,9 +113,11 @@ def main():
 
         if not results:
             print("Nav rezultātu.")
-          print("\nAnalizē ar Gemini...")
+            continue
+
+        print("\nAnalizē ar Gemini...")
         try:
-            desc = describe_results(model, compact_ctx, sql, results, question)
+            desc = describe_results(client, compact_ctx, sql, results, question)
             print(f"\nANALĪZE:\n{'-'*55}\n{desc}\n{'-'*55}")
         except Exception as e:
             print(f"Kļūda: {e}")
